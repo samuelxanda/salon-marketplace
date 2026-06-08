@@ -84,6 +84,34 @@ export async function loginAction(prevState: any, formData: FormData): Promise<A
   redirect("/salons");
 }
 
+export async function verifyEmailAction(prevState: any, formData: FormData): Promise<AuthActionResponse> {
+  const email = formData.get("email") as string;
+  const code = formData.get("code") as string;
+
+  if (!email || !code) {
+    return { error: "Email and verification code are required." };
+  }
+
+  try {
+    const client = await getClient();
+    const { error } = await client.auth.verifyOtp({
+      email,
+      token: code,
+      type: "signup",
+    });
+
+    if (error) {
+      console.error("Verification error:", error);
+      return { error: "Invalid verification code. Please try again." };
+    }
+  } catch (err) {
+    console.error("Unexpected verification error:", err);
+    return { error: "An unexpected error occurred." };
+  }
+
+  redirect("/salons");
+}
+
 export async function signupAction(prevState: any, formData: FormData): Promise<AuthActionResponse> {
   const data = Object.fromEntries(formData.entries());
   const validatedFields = SignupSchema.safeParse(data);
@@ -98,11 +126,10 @@ export async function signupAction(prevState: any, formData: FormData): Promise<
 
   try {
     const client = await getClient();
-    const { data: signUpData, error } = await client.auth.signUp({
+    const { error } = await client.auth.signUp({
       email,
       password,
       name,
-      autoConfirm: true,
     });
 
     if (error) {
@@ -114,35 +141,13 @@ export async function signupAction(prevState: any, formData: FormData): Promise<
       return { error: "Could not create account. Please try again." };
     }
 
-    // Explicitly confirm the user
-    const userId = (signUpData as any).user?.id || (signUpData as any).id;
-    if (userId) {
-      const admin = createServerClient({
-        baseUrl: INSFORGE_URL,
-        anonKey: process.env.INSFORGE_SERVICE_ROLE_KEY || "",
-        cookies: await cookies(),
-      });
-      await admin.auth.admin.updateUserById(userId, {
-        email_confirm: true,
-      });
-    }
-
-    // Attempt auto-login
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    const loginResult = await client.auth.signInWithPassword({ email, password });
+    // Redirect to verification page
+    redirect(`/verify-email?email=${encodeURIComponent(email)}`);
     
-    if (loginResult.error) {
-       return { 
-         success: "Account created! Please check your email to verify your account.",
-       };
-    }
-
   } catch (err) {
     console.error("Unexpected signup error:", err);
     return { error: "An unexpected error occurred." };
   }
-
-  redirect("/salons");
 }
 
 export async function logoutAction() {
