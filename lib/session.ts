@@ -22,20 +22,14 @@ export async function getSession() {
   });
   console.log("DEBUG: Refresh result:", JSON.stringify(refreshResult, null, 2));
 
-  if (refreshResult.error) {
+  if (refreshResult.error || !refreshResult.data?.user) {
     console.error("DEBUG: Session refresh error:", refreshResult.error);
     return null;
   }
 
-  const session = await client.auth.getCurrentUser();
-  console.log("DEBUG: Session result (full):", JSON.stringify(session, null, 2));
-
-  if (session.error || !session.data?.user) {
-    return null;
-  }
-
+  // Use the user data directly from the refresh result
   return {
-    user: session.data.user,
-    accessToken: refreshData.accessToken,
+    user: refreshResult.data.user,
+    accessToken: refreshResult.data.accessToken,
   };
 }
