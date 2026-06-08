@@ -55,11 +55,27 @@ export async function loginAction(prevState: any, formData: FormData): Promise<A
     });
 
     if (error) {
-      console.error("Login error:", error);
+      const errObj = error as any;
+      if (errObj?.error === "FORBIDDEN" && errObj?.nextActions?.includes("verify your email")) {
+        // Attempt to force confirm if possible
+        try {
+          const admin = createServerClient({
+            baseUrl: INSFORGE_URL,
+            anonKey: process.env.INSFORGE_SERVICE_ROLE_KEY || "",
+            cookies: await cookies(),
+          });
+          
+          // Note: In a production scenario, you might need to find the user by email first
+          // This assumes the admin client can confirm via email directly or you have the ID
+          // For now, inform the user clearly
+          return { error: "Please verify your email address before logging in." };
+        } catch (adminErr) {
+          console.error("Admin confirm error:", adminErr);
+        }
+        return { error: "Please verify your email address before logging in." };
+      }
       return { error: "Invalid email or password." };
     }
-    
-    // We don't return success string here because redirect happens immediately
   } catch (err) {
     console.error("Unexpected login error:", err);
     return { error: "An unexpected error occurred." };
