@@ -37,14 +37,22 @@ export async function POST(request: Request) {
       });
     }
 
+    // Explicitly confirm the user since autoConfirm might not be enough for immediate sign-in in some configs
+    const userId = (data as any).user?.id || (data as any).id;
+    if (userId) {
+      await insforgeAdmin.auth.admin.updateUserById(userId, {
+        email_confirm: true,
+      });
+    }
+
     // If signUp returns a session immediately, use it
     let accessToken = (data as any).accessToken;
 
     if (!accessToken) {
-      // Small delay to allow auth database to sync if needed
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Small delay to allow auth database to sync
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-      // Fallback: Sign in manually if token wasn't returned in signUp
+      // Fallback: Sign in manually
       const { data: sessionData, error: sessionError } = await insforgeAdmin.auth.signInWithPassword({
         email,
         password,
@@ -52,6 +60,13 @@ export async function POST(request: Request) {
 
       if (sessionError || !sessionData) {
         console.error("Auto sign-in failed after signup:", sessionError);
+        const errObj = sessionError as any;
+        if (errObj?.nextActions?.includes("verify your email") || errObj?.error === "FORBIDDEN") {
+          return new Response(null, {
+            status: 302,
+            headers: { Location: "/signup?error=verification_required" },
+          });
+        }
         return new Response(null, {
           status: 302,
           headers: { Location: "/signup?error=confirm_signin_failed" },
