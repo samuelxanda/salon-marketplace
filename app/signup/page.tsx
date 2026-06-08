@@ -11,6 +11,8 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
   const errorMessages: Record<string, string> = {
     missing_fields: "Email and password are required.",
     confirm_signin_failed: "Account created but could not sign in automatically. Try signing in.",
+    user_exists: "An account with this email already exists.",
+    auth_required: "Please sign in to book an appointment.",
     unexpected: "Something went wrong. Please try again.",
   };
 

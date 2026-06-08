@@ -24,6 +24,13 @@ export async function POST(request: Request) {
 
     if (error || !data) {
       console.error("Sign up error:", error);
+      const errorCode = (error as any)?.code;
+      if (errorCode === "user_already_exists") {
+        return new Response(null, {
+          status: 302,
+          headers: { Location: "/signup?error=user_exists" },
+        });
+      }
       return new Response(null, {
         status: 302,
         headers: { Location: "/signup?error=unexpected" },
@@ -43,10 +50,11 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies();
-    cookieStore.set("insforge_access_token", sessionData.accessToken, {
+    cookieStore.set("insforge-access-token", sessionData.accessToken, {
       path: "/",
       httpOnly: true,
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
     });
 
     return new Response(null, {

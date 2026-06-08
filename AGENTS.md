@@ -13,8 +13,6 @@ This project uses [InsForge](https://insforge.dev): an all-in-one, open-source P
   - `insforge-integrations`: wiring external auth providers (Clerk, Auth0, WorkOS, Better Auth, etc.) for JWT-based RLS, or the OKX x402 payment facilitator.
   - `find-skills`: discovering additional skills on demand.
   - `global-skills`: referencing additional capabilities stored in `~/.agents/skills`.
-  - `my-custom-testing`: global testing patterns from `~/.agents/skills/testing`.
-  - `internal-api-docs`: schema definitions from `~/.agents/skills/api-docs`.
 - **Credentials:** app code reads keys from `.env.local`; the CLI reads `.insforge/project.json`. Never hardcode or commit keys.
 
 Key patterns:

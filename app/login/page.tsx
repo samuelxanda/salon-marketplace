@@ -11,6 +11,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const errorMessages: Record<string, string> = {
     missing_fields: "Email and password are required.",
     invalid_credentials: "Invalid email or password.",
+    auth_required: "Please sign in to book an appointment.",
     unexpected: "Something went wrong. Please try again.",
   };
 
