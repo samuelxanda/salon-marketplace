@@ -24,8 +24,8 @@ export async function POST(request: Request) {
 
     if (error || !data) {
       console.error("Sign up error:", error);
-      const errorCode = (error as any)?.code;
-      if (errorCode === "user_already_exists") {
+      const errObj = error as any;
+      if (errObj?.error === "AUTH_EMAIL_EXISTS" || errObj?.code === "user_already_exists") {
         return new Response(null, {
           status: 302,
           headers: { Location: "/signup?error=user_exists" },
