@@ -21,16 +21,18 @@ export async function getSession() {
   });
 
   console.log("DEBUG: Client initialized. Available auth methods:", Object.keys(client.auth));
+  console.log("DEBUG: Token manager:", JSON.stringify(client.auth.tokenManager, null, 2));
 
-  const session = await client.auth.getCurrentUser();
-  console.log("DEBUG: Session result (full):", JSON.stringify(session, null, 2));
+  // If getCurrentUser is not available, try to get the session from tokenManager
+  const session = await (client.auth as any).tokenManager.getSession?.();
+  console.log("DEBUG: Session from tokenManager:", JSON.stringify(session, null, 2));
 
-  if (session.error || !session.data?.user) {
+  if (!session || !session.user) {
     return null;
   }
 
   return {
-    user: session.data.user,
+    user: session.user,
     accessToken: token,
   };
 }
