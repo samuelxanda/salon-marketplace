@@ -94,10 +94,9 @@ export async function verifyEmailAction(prevState: any, formData: FormData): Pro
 
   try {
     const client = await getClient();
-    const { error } = await client.auth.verifyOtp({
+    const { error } = await client.auth.verifyEmail({
       email,
-      token: code,
-      type: "signup",
+      code,
     });
 
     if (error) {
