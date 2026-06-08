@@ -20,6 +20,11 @@ export async function getSession() {
     cookies: cookieStore,
   });
 
+  // Explicitly set the token if the SDK supports it, or check documentation for SSR client
+  // Some SDKs require setting the token on the client instance if cookie reading fails.
+  // Assuming standard SSR pattern:
+  client.auth.setSession(token);
+
   const session = await client.auth.getCurrentUser();
   console.log("DEBUG: Session result (full):", JSON.stringify(session, null, 2));
 
