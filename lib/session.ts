@@ -7,14 +7,18 @@ const ANON_KEY = process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY || "";
 export async function getSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get("insforge-access-token")?.value;
+  console.log("DEBUG: Access token found:", !!token);
 
   if (!token) return null;
 
-  const session = await createServerClient({
+  const client = createServerClient({
     baseUrl: INSFORGE_URL,
     anonKey: ANON_KEY,
     cookies: cookieStore,
-  }).auth.getCurrentUser();
+  });
+
+  const session = await client.auth.getCurrentUser();
+  console.log("DEBUG: Session result:", JSON.stringify(session, null, 2));
 
   if (session.error || !session.data?.user) {
     return null;
