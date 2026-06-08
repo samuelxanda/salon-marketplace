@@ -46,7 +46,7 @@ export async function Navbar() {
               </form>
             </div>
           ) : (
-...
+            <>
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-text-primary hover:bg-accent-muted transition-colors"
