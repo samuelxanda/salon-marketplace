@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useSearchParams } from "next/navigation";
+import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { verifyEmailAction } from "@/actions/auth";
 import { AuthAlert, FieldError } from "@/components/auth/AuthFeedback";
 
