@@ -49,7 +49,7 @@ export async function loginAction(prevState: any, formData: FormData): Promise<A
 
   try {
     const client = await getClient();
-    const { error } = await client.auth.signInWithPassword({
+    const { data: authData, error } = await client.auth.signInWithPassword({
       email,
       password,
     });
@@ -57,24 +57,19 @@ export async function loginAction(prevState: any, formData: FormData): Promise<A
     if (error) {
       const errObj = error as any;
       if (errObj?.error === "FORBIDDEN" && errObj?.nextActions?.includes("verify your email")) {
-        // Attempt to force confirm if possible
-        try {
-          const admin = createServerClient({
-            baseUrl: INSFORGE_URL,
-            anonKey: process.env.INSFORGE_SERVICE_ROLE_KEY || "",
-            cookies: await cookies(),
-          });
-          
-          // Note: In a production scenario, you might need to find the user by email first
-          // This assumes the admin client can confirm via email directly or you have the ID
-          // For now, inform the user clearly
-          return { error: "Please verify your email address before logging in." };
-        } catch (adminErr) {
-          console.error("Admin confirm error:", adminErr);
-        }
         return { error: "Please verify your email address before logging in." };
       }
       return { error: "Invalid email or password." };
+    }
+
+    if (authData?.accessToken) {
+      const cookieStore = await cookies();
+      cookieStore.set("insforge-access-token", authData.accessToken, {
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      });
     }
   } catch (err) {
     console.error("Unexpected login error:", err);
@@ -104,11 +99,24 @@ export async function verifyEmailAction(prevState: any, formData: FormData): Pro
       return { error: "Invalid verification code. Please try again." };
     }
 
-    // After successful verification, the session should be set by the SDK
-    // Let's verify if the user is now authenticated
+    // After verification, we need to establish the session.
+    // Calling signInWithPassword might not work without the password.
+    // Try to get the user and set the session if the SDK provides a way.
+    // Since we don't have the password, we rely on verifyEmail to set it or
+    // check if verifyEmail returns a session.
     const { data: sessionData } = await client.auth.getCurrentUser();
-    if (!sessionData?.user) {
-      console.error("Verification succeeded but no session found.");
+    
+    if (sessionData?.accessToken) {
+      const cookieStore = await cookies();
+      cookieStore.set("insforge-access-token", sessionData.accessToken, {
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      });
+    } else {
+       console.error("Verification succeeded but no session found.");
+       return { error: "Verification succeeded, but could not establish session. Please login." };
     }
   } catch (err) {
     console.error("Unexpected verification error:", err);
