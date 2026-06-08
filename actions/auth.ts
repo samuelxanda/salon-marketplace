@@ -103,6 +103,13 @@ export async function verifyEmailAction(prevState: any, formData: FormData): Pro
       console.error("Verification error:", error);
       return { error: "Invalid verification code. Please try again." };
     }
+
+    // After successful verification, the session should be set by the SDK
+    // Let's verify if the user is now authenticated
+    const { data: sessionData } = await client.auth.getCurrentUser();
+    if (!sessionData?.user) {
+      console.error("Verification succeeded but no session found.");
+    }
   } catch (err) {
     console.error("Unexpected verification error:", err);
     return { error: "An unexpected error occurred." };
