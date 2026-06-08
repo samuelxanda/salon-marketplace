@@ -4,8 +4,27 @@ import { createServerClient } from "@insforge/sdk/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { z } from "zod";
+
 const INSFORGE_URL = process.env.NEXT_PUBLIC_INSFORGE_URL || "https://9x74rdsf.eu-central.insforge.app";
 const ANON_KEY = process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY || "";
+
+const LoginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+const SignupSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+type AuthActionResponse = {
+  success?: string;
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+};
 
 async function getClient() {
   const cookieStore = await cookies();
@@ -16,13 +35,17 @@ async function getClient() {
   });
 }
 
-export async function loginAction(prevState: any, formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+export async function loginAction(prevState: any, formData: FormData): Promise<AuthActionResponse> {
+  const data = Object.fromEntries(formData.entries());
+  const validatedFields = LoginSchema.safeParse(data);
 
-  if (!email || !password) {
-    return { error: "Email and password are required." };
+  if (!validatedFields.success) {
+    return {
+      fieldErrors: validatedFields.error.flatten().fieldErrors,
+    };
   }
+
+  const { email, password } = validatedFields.data;
 
   try {
     const client = await getClient();
@@ -35,6 +58,8 @@ export async function loginAction(prevState: any, formData: FormData) {
       console.error("Login error:", error);
       return { error: "Invalid email or password." };
     }
+    
+    // We don't return success string here because redirect happens immediately
   } catch (err) {
     console.error("Unexpected login error:", err);
     return { error: "An unexpected error occurred." };
@@ -43,18 +68,21 @@ export async function loginAction(prevState: any, formData: FormData) {
   redirect("/salons");
 }
 
-export async function signupAction(prevState: any, formData: FormData) {
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+export async function signupAction(prevState: any, formData: FormData): Promise<AuthActionResponse> {
+  const data = Object.fromEntries(formData.entries());
+  const validatedFields = SignupSchema.safeParse(data);
 
-  if (!email || !password || !name) {
-    return { error: "All fields are required." };
+  if (!validatedFields.success) {
+    return {
+      fieldErrors: validatedFields.error.flatten().fieldErrors,
+    };
   }
+
+  const { name, email, password } = validatedFields.data;
 
   try {
     const client = await getClient();
-    const { data, error } = await client.auth.signUp({
+    const { data: signUpData, error } = await client.auth.signUp({
       email,
       password,
       name,
@@ -70,9 +98,28 @@ export async function signupAction(prevState: any, formData: FormData) {
       return { error: "Could not create account. Please try again." };
     }
 
+    // Explicitly confirm the user
+    const userId = (signUpData as any).user?.id || (signUpData as any).id;
+    if (userId) {
+      const admin = createServerClient({
+        baseUrl: INSFORGE_URL,
+        anonKey: process.env.INSFORGE_SERVICE_ROLE_KEY || "",
+        cookies: await cookies(),
+      });
+      await admin.auth.admin.updateUserById(userId, {
+        email_confirm: true,
+      });
+    }
+
     // Attempt auto-login
     await new Promise((resolve) => setTimeout(resolve, 800));
-    await client.auth.signInWithPassword({ email, password });
+    const loginResult = await client.auth.signInWithPassword({ email, password });
+    
+    if (loginResult.error) {
+       return { 
+         success: "Account created! Please sign in manually.",
+       };
+    }
 
   } catch (err) {
     console.error("Unexpected signup error:", err);

@@ -1,18 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect } from "react";
+import { useActionState } from "react";
 import { loginAction } from "@/actions/auth";
-import { toast } from "sonner";
+import { AuthAlert, FieldError } from "@/components/auth/AuthFeedback";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
-
-  useEffect(() => {
-    if (state?.error) {
-      toast.error(state.error);
-    }
-  }, [state]);
 
   return (
     <div className="flex flex-col min-h-full bg-background">
@@ -25,6 +19,8 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-surface rounded-xl border border-border p-6 shadow-sm">
+          <AuthAlert error={state?.error} />
+          
           <form action={formAction} className="space-y-4">
             <div>
               <label className="text-sm font-medium text-text-primary mb-1 block">
@@ -38,6 +34,7 @@ export default function LoginPage() {
                 className="w-full bg-surface border border-border rounded-md px-3 py-2 text-text-primary placeholder:text-text-muted focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-50"
                 disabled={isPending}
               />
+              <FieldError message={state?.fieldErrors?.email?.[0]} />
             </div>
 
             <div>
@@ -52,6 +49,7 @@ export default function LoginPage() {
                 className="w-full bg-surface border border-border rounded-md px-3 py-2 text-text-primary placeholder:text-text-muted focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-50"
                 disabled={isPending}
               />
+              <FieldError message={state?.fieldErrors?.password?.[0]} />
             </div>
 
             <button
