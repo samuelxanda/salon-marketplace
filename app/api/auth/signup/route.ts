@@ -37,20 +37,31 @@ export async function POST(request: Request) {
       });
     }
 
-    const { data: sessionData, error: sessionError } = await insforgeAdmin.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // If signUp returns a session immediately, use it
+    let accessToken = (data as any).accessToken;
 
-    if (sessionError || !sessionData) {
-      return new Response(null, {
-        status: 302,
-        headers: { Location: "/signup?error=confirm_signin_failed" },
+    if (!accessToken) {
+      // Small delay to allow auth database to sync if needed
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Fallback: Sign in manually if token wasn't returned in signUp
+      const { data: sessionData, error: sessionError } = await insforgeAdmin.auth.signInWithPassword({
+        email,
+        password,
       });
+
+      if (sessionError || !sessionData) {
+        console.error("Auto sign-in failed after signup:", sessionError);
+        return new Response(null, {
+          status: 302,
+          headers: { Location: "/signup?error=confirm_signin_failed" },
+        });
+      }
+      accessToken = sessionData.accessToken;
     }
 
     const cookieStore = await cookies();
-    cookieStore.set("insforge-access-token", sessionData.accessToken, {
+    cookieStore.set("insforge-access-token", accessToken, {
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
