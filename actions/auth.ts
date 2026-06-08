@@ -133,7 +133,7 @@ export async function signupAction(prevState: any, formData: FormData): Promise<
     
     if (loginResult.error) {
        return { 
-         success: "Account created! Please sign in manually.",
+         success: "Account created! Please check your email to verify your account.",
        };
     }
 
