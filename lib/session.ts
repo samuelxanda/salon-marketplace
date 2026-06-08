@@ -17,12 +17,13 @@ export async function getSession() {
   });
 
   // Explicitly refresh session to hydrate the SSR client
-  const { data: refreshData, error: refreshError } = await client.auth.refreshSession({
+  const refreshResult = await client.auth.refreshSession({
     refreshToken,
   });
+  console.log("DEBUG: Refresh result:", JSON.stringify(refreshResult, null, 2));
 
-  if (refreshError) {
-    console.error("DEBUG: Session refresh error:", refreshError);
+  if (refreshResult.error) {
+    console.error("DEBUG: Session refresh error:", refreshResult.error);
     return null;
   }
 
