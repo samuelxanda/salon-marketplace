@@ -21,6 +21,8 @@ export async function getSession() {
   });
 
   console.log("DEBUG: Client initialized with cookies.");
+  // Check if we can get the session from the client directly if getCurrentUser is failing
+  console.log("DEBUG: Client session:", JSON.stringify(await client.auth.getSession(), null, 2));
 
   const session = await client.auth.getCurrentUser();
   console.log("DEBUG: Session result (full):", JSON.stringify(session, null, 2));
