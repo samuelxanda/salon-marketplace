@@ -140,14 +140,14 @@ export async function signupAction(prevState: any, formData: FormData): Promise<
       }
       return { error: "Could not create account. Please try again." };
     }
-
-    // Redirect to verification page
-    redirect(`/verify-email?email=${encodeURIComponent(email)}`);
     
   } catch (err) {
     console.error("Unexpected signup error:", err);
     return { error: "An unexpected error occurred." };
   }
+
+  // Redirect to verification page
+  redirect(`/verify-email?email=${encodeURIComponent(email)}`);
 }
 
 export async function logoutAction() {
