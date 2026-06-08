@@ -20,12 +20,16 @@ export async function getSession() {
     cookies: cookieStore,
   });
 
-  console.log("DEBUG: Client initialized. Available auth methods:", Object.keys(client.auth));
-  console.log("DEBUG: Token manager:", JSON.stringify(client.auth.tokenManager, null, 2));
+  console.log("DEBUG: Available tokenManager methods:", Object.keys(client.auth.tokenManager));
 
-  // If getCurrentUser is not available, try to get the session from tokenManager
+  // Try setting the session manually via tokenManager if available
+  if (typeof (client.auth.tokenManager as any).setSession === 'function') {
+      await (client.auth.tokenManager as any).setSession(token);
+      console.log("DEBUG: Token manually set in tokenManager.");
+  }
+
   const session = await (client.auth as any).tokenManager.getSession?.();
-  console.log("DEBUG: Session from tokenManager:", JSON.stringify(session, null, 2));
+  console.log("DEBUG: Session from tokenManager after manual set:", JSON.stringify(session, null, 2));
 
   if (!session || !session.user) {
     return null;
