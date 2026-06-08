@@ -21,7 +21,7 @@ export async function getSession() {
   });
 
   const session = await client.auth.getCurrentUser();
-  console.log("DEBUG: Session result (user exists):", !!session.data?.user);
+  console.log("DEBUG: Session result (full):", JSON.stringify(session, null, 2));
 
   if (session.error || !session.data?.user) {
     return null;
