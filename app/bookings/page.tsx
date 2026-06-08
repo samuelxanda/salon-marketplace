@@ -2,16 +2,6 @@ import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { getBookings } from "@/lib/data-fetching";
 
-// This should eventually move to a shared types file
-type Booking = {
-  id: string;
-  salon_id: string;
-  service_id: string;
-  time_slot_id: string;
-  status: "confirmed" | "pending" | "cancelled";
-  created_at: string;
-};
-
 const getStatusStyles = (status: string) => {
   switch (status) {
     case "confirmed":
@@ -52,10 +42,6 @@ export default async function BookingsPage() {
   }
 
   const bookings = await getBookings(session.user.id);
-
-  // We need to map database booking to displayable info. 
-  // NOTE: In a real app, we would join these in the DB query or fetch linked salon/service names.
-  // For now, displaying IDs as placeholders.
   const upcoming = bookings.filter((b) => b.status !== "cancelled");
   const past = bookings.filter((b) => b.status === "cancelled");
 
@@ -72,7 +58,7 @@ export default async function BookingsPage() {
           </h2>
           {upcoming.length > 0 ? (
             <div className="grid gap-4">
-              {upcoming.map((booking) => (
+              {upcoming.map((booking: any) => (
                 <div
                   key={booking.id}
                   className="bg-surface rounded-xl border border-border p-6"
@@ -80,10 +66,10 @@ export default async function BookingsPage() {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="font-semibold text-text-primary">
-                        Booking ID: {booking.id.slice(0, 8)}
+                        {booking.salonName}
                       </h3>
                       <p className="text-sm text-text-muted">
-                        Salon: {booking.salon_id}
+                        Service: {booking.serviceName}
                       </p>
                     </div>
                     <span
@@ -95,6 +81,9 @@ export default async function BookingsPage() {
                         booking.status.slice(1)}
                     </span>
                   </div>
+                  <p className="text-sm text-text-secondary">
+                    Booked on: {new Date(booking.created_at).toLocaleDateString()}
+                  </p>
                 </div>
               ))}
             </div>

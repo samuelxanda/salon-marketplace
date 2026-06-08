@@ -44,13 +44,36 @@ export async function getTimeSlots(salonId: string, serviceId?: string) {
 }
 
 export async function getBookings(clientId: string) {
-  const { data, error } = await insforgeAdmin.database
+  const { data: bookings, error: bookingsError } = await insforgeAdmin.database
     .from("bookings")
     .select("*")
     .eq("client_id", clientId);
-  if (error) {
-    console.error("[data-fetching/getBookings]", error);
+
+  if (bookingsError) {
+    console.error("[data-fetching/getBookings]", bookingsError);
     return [];
   }
-  return data || [];
+
+  if (!bookings || bookings.length === 0) return [];
+
+  // Fetch unique salon and service IDs to minimize queries
+  const salonIds = [...new Set(bookings.map((b) => b.salon_id))];
+  const serviceIds = [...new Set(bookings.map((b) => b.service_id))];
+
+  const { data: salons } = await insforgeAdmin.database
+    .from("salons")
+    .select("id, name")
+    .in("id", salonIds);
+
+  const { data: services } = await insforgeAdmin.database
+    .from("services")
+    .select("id, name")
+    .in("id", serviceIds);
+
+  // Enrich bookings
+  return bookings.map((b) => ({
+    ...b,
+    salonName: salons?.find((s) => s.id === b.salon_id)?.name || "Unknown Salon",
+    serviceName: services?.find((s) => s.id === b.service_id)?.name || "Unknown Service",
+  }));
 }
