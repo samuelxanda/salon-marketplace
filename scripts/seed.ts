@@ -13,37 +13,37 @@ const mockSalons = [
     name: "Kigali Hair Studio",
     description: "Premium hair styling and coloring services",
     location: "Kacyiru, Kigali",
-    image_url: "https://placehold.co/400x300/e91e63/white?text=Kigali+Hair+Studio",
+    image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80",
   },
   {
     name: "Downtown Barber",
     description: "Classic cuts and modern styles for men",
     location: "Downtown, Kigali",
-    image_url: "https://placehold.co/400x300/3f51b5/white?text=Downtown+Barber",
+    image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80",
   },
   {
     name: "Glam Nails & Spa",
     description: "Nail care and spa treatments",
     location: "Nyarugenge, Kigali",
-    image_url: "https://placehold.co/400x300/9c27b0/white?text=Glam+Nails+%26+Spa",
+    image_url: "https://images.unsplash.com/photo-1604654894610-df490651e619?w=800&q=80",
   },
   {
     name: "Men's Grooming Lounge",
     description: "Premium grooming for modern men",
     location: "Kimironko, Kigali",
-    image_url: "https://placehold.co/400x300/00796b/white?text=Men%27s+Grooming",
+    image_url: "https://images.unsplash.com/photo-1621605815841-aa897af68032?w=800&q=80",
   },
   {
     name: "Beauty Bar",
     description: "Full service beauty salon",
     location: "Remera, Kigali",
-    image_url: "https://placehold.co/400x300/f44336/white?text=Beauty+Bar",
+    image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&q=80",
   },
   {
     name: "Hair Masters",
     description: "Professional hair care and styling",
     location: "Gikondo, Kigali",
-    image_url: "https://placehold.co/400x300/ff9800/white?text=Hair+Masters",
+    image_url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&q=80",
   },
 ];
 
