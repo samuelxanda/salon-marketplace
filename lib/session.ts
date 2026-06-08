@@ -3,16 +3,12 @@ import { cookies } from "next/headers";
 
 const INSFORGE_URL = process.env.NEXT_PUBLIC_INSFORGE_URL || "https://9x74rdsf.eu-central.insforge.app";
 const ANON_KEY = process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY || "";
-
 export async function getSession() {
   const cookieStore = await cookies();
-  const allCookies = cookieStore.getAll();
-  console.log("DEBUG: All cookies in request:", JSON.stringify(allCookies, null, 2));
+  const refreshToken = cookieStore.get("insforge-refresh-token")?.value;
+  console.log("DEBUG: Refresh token found:", !!refreshToken);
 
-  const token = cookieStore.get("insforge-access-token")?.value;
-  console.log("DEBUG: Access token found:", !!token);
-
-  if (!token) return null;
+  if (!refreshToken) return null;
 
   const client = createServerClient({
     baseUrl: INSFORGE_URL,
@@ -20,23 +16,25 @@ export async function getSession() {
     cookies: cookieStore,
   });
 
-  console.log("DEBUG: Available tokenManager methods:", Object.keys(client.auth.tokenManager));
+  // Explicitly refresh session to hydrate the SSR client
+  const { data: refreshData, error: refreshError } = await client.auth.refreshSession({
+    refreshToken,
+  });
 
-  // Try setting the session manually via tokenManager if available
-  if (typeof (client.auth.tokenManager as any).setSession === 'function') {
-      await (client.auth.tokenManager as any).setSession(token);
-      console.log("DEBUG: Token manually set in tokenManager.");
+  if (refreshError) {
+    console.error("DEBUG: Session refresh error:", refreshError);
+    return null;
   }
 
-  const session = await (client.auth as any).tokenManager.getSession?.();
-  console.log("DEBUG: Session from tokenManager after manual set:", JSON.stringify(session, null, 2));
+  const session = await client.auth.getCurrentUser();
+  console.log("DEBUG: Session result (full):", JSON.stringify(session, null, 2));
 
-  if (!session || !session.user) {
+  if (session.error || !session.data?.user) {
     return null;
   }
 
   return {
-    user: session.user,
-    accessToken: token,
+    user: session.data.user,
+    accessToken: refreshData.accessToken,
   };
 }

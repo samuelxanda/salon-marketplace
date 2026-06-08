@@ -70,6 +70,15 @@ export async function loginAction(prevState: any, formData: FormData): Promise<A
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
       });
+      
+      if (authData.refreshToken) {
+        cookieStore.set("insforge-refresh-token", authData.refreshToken, {
+          path: "/",
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
+      }
     }
   } catch (err) {
     console.error("Unexpected login error:", err);
