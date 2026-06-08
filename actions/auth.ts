@@ -177,6 +177,12 @@ export async function logoutAction() {
   try {
     const client = await getClient();
     await client.auth.signOut();
+    
+    // Explicitly delete auth cookies
+    const cookieStore = await cookies();
+    cookieStore.delete("insforge-access-token");
+    cookieStore.delete("insforge-refresh-token");
+    
   } catch (err) {
     console.error("Logout error:", err);
   }
