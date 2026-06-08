@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSession } from "@/lib/session";
+import { logoutAction } from "@/actions/auth";
 
 export async function Navbar() {
   const session = await getSession();
@@ -35,7 +36,7 @@ export async function Navbar() {
               <span className="text-sm text-text-secondary">
                 {user.email}
               </span>
-              <form method="POST" action="/api/auth/logout">
+              <form action={logoutAction}>
                 <button
                   type="submit"
                   className="inline-flex items-center justify-center rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-accent-muted transition-colors"
@@ -45,7 +46,7 @@ export async function Navbar() {
               </form>
             </div>
           ) : (
-            <>
+...
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-text-primary hover:bg-accent-muted transition-colors"

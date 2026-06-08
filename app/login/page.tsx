@@ -1,23 +1,22 @@
+"use client";
+
 import Link from "next/link";
+import { useActionState, useEffect } from "react";
+import { loginAction } from "@/actions/auth";
+import { toast } from "sonner";
 
-type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>;
-};
+export default function LoginPage() {
+  const [state, formAction, isPending] = useActionState(loginAction, null);
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const params = await searchParams;
-  const error = params.error;
-
-  const errorMessages: Record<string, string> = {
-    missing_fields: "Email and password are required.",
-    invalid_credentials: "Invalid email or password.",
-    auth_required: "Please sign in to book an appointment.",
-    unexpected: "Something went wrong. Please try again.",
-  };
+  useEffect(() => {
+    if (state?.error) {
+      toast.error(state.error);
+    }
+  }, [state]);
 
   return (
     <div className="flex flex-col min-h-full bg-background">
-      <section className="max-w-md mx-auto px-6 md:px-8 py-12">
+      <section className="max-w-md mx-auto px-6 md:px-8 py-12 w-full">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-text-primary mb-2">
             Welcome to SalonBook
@@ -25,14 +24,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <p className="text-text-secondary">Sign in to book appointments</p>
         </div>
 
-        {error && (
-          <div className="border border-error rounded-md p-4 mb-6 bg-error-lightest">
-            <p className="text-sm text-error">{errorMessages[error] || "An error occurred."}</p>
-          </div>
-        )}
-
-        <div className="bg-surface rounded-xl border border-border p-6">
-          <form method="POST" action="/api/auth/login" className="space-y-4">
+        <div className="bg-surface rounded-xl border border-border p-6 shadow-sm">
+          <form action={formAction} className="space-y-4">
             <div>
               <label className="text-sm font-medium text-text-primary mb-1 block">
                 Email
@@ -42,7 +35,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 name="email"
                 required
                 placeholder="you@example.com"
-                className="w-full bg-surface border border-border rounded-md px-3 py-2 text-text-primary placeholder:text-text-muted focus:ring-1 focus:ring-accent focus:border-accent"
+                className="w-full bg-surface border border-border rounded-md px-3 py-2 text-text-primary placeholder:text-text-muted focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-50"
+                disabled={isPending}
               />
             </div>
 
@@ -55,15 +49,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 name="password"
                 required
                 placeholder="••••••••"
-                className="w-full bg-surface border border-border rounded-md px-3 py-2 text-text-primary placeholder:text-text-muted focus:ring-1 focus:ring-accent focus:border-accent"
+                className="w-full bg-surface border border-border rounded-md px-3 py-2 text-text-primary placeholder:text-text-muted focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-50"
+                disabled={isPending}
               />
             </div>
 
             <button
               type="submit"
-              className="w-full inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-accent-foreground font-medium hover:bg-accent-dark transition-colors"
+              disabled={isPending}
+              className="w-full inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-accent-foreground font-medium hover:bg-accent-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {isPending ? "Signing In..." : "Sign In"}
             </button>
           </form>
 
