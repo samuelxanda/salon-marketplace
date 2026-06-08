@@ -1,52 +1,27 @@
 import Link from "next/link";
 import { getSession } from "@/lib/session";
+import { getBookings } from "@/lib/data-fetching";
 
+// This should eventually move to a shared types file
 type Booking = {
   id: string;
-  salonName: string;
-  serviceName: string;
-  date: string;
-  time: string;
+  salon_id: string;
+  service_id: string;
+  time_slot_id: string;
   status: "confirmed" | "pending" | "cancelled";
+  created_at: string;
 };
-
-const mockBookings: Booking[] = [
-  {
-    id: "b1",
-    salonName: "Kigali Hair Studio",
-    serviceName: "Haircut",
-    date: "June 10, 2026",
-    time: "9:00 AM",
-    status: "confirmed",
-  },
-  {
-    id: "b2",
-    salonName: "Downtown Barber",
-    serviceName: "Beard Trim",
-    date: "June 15, 2026",
-    time: "2:30 PM",
-    status: "pending",
-  },
-  {
-    id: "b3",
-    salonName: "Glam Nails & Spa",
-    serviceName: "Manicure",
-    date: "May 28, 2026",
-    time: "11:00 AM",
-    status: "cancelled",
-  },
-];
 
 const getStatusStyles = (status: string) => {
   switch (status) {
     case "confirmed":
-      return "bg-success-lightest text-success-foreground";
+      return "bg-green-100 text-green-800";
     case "pending":
-      return "bg-accent-muted text-accent";
+      return "bg-yellow-100 text-yellow-800";
     case "cancelled":
-      return "bg-surface-secondary text-text-muted";
+      return "bg-gray-100 text-gray-800";
     default:
-      return "bg-surface-secondary text-text-muted";
+      return "bg-gray-100 text-gray-800";
   }
 };
 
@@ -76,8 +51,13 @@ export default async function BookingsPage() {
     );
   }
 
-  const upcoming = mockBookings.filter((b) => b.status !== "cancelled");
-  const past = mockBookings.filter((b) => b.status === "cancelled");
+  const bookings = await getBookings(session.user.id);
+
+  // We need to map database booking to displayable info. 
+  // NOTE: In a real app, we would join these in the DB query or fetch linked salon/service names.
+  // For now, displaying IDs as placeholders.
+  const upcoming = bookings.filter((b) => b.status !== "cancelled");
+  const past = bookings.filter((b) => b.status === "cancelled");
 
   return (
     <div className="flex flex-col min-h-full bg-background">
@@ -100,10 +80,10 @@ export default async function BookingsPage() {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="font-semibold text-text-primary">
-                        {booking.salonName}
+                        Booking ID: {booking.id.slice(0, 8)}
                       </h3>
                       <p className="text-sm text-text-muted">
-                        {booking.serviceName}
+                        Salon: {booking.salon_id}
                       </p>
                     </div>
                     <span
@@ -114,10 +94,6 @@ export default async function BookingsPage() {
                       {booking.status.charAt(0).toUpperCase() +
                         booking.status.slice(1)}
                     </span>
-                  </div>
-                  <div className="flex gap-4 text-sm">
-                    <span className="text-text-secondary">{booking.date}</span>
-                    <span className="text-text-secondary">{booking.time}</span>
                   </div>
                 </div>
               ))}
@@ -134,47 +110,6 @@ export default async function BookingsPage() {
                 Book Now
               </Link>
             </div>
-          )}
-        </div>
-
-        <div>
-          <h2 className="text-xl font-semibold text-text-primary mb-4">
-            Past Appointments
-          </h2>
-          {past.length > 0 ? (
-            <div className="grid gap-4">
-              {past.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="bg-surface rounded-xl border border-border p-6 opacity-75"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-semibold text-text-primary">
-                        {booking.salonName}
-                      </h3>
-                      <p className="text-sm text-text-muted">
-                        {booking.serviceName}
-                      </p>
-                    </div>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyles(
-                        booking.status
-                      )}`}
-                    >
-                      {booking.status.charAt(0).toUpperCase() +
-                        booking.status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="flex gap-4 text-sm">
-                    <span className="text-text-secondary">{booking.date}</span>
-                    <span className="text-text-secondary">{booking.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-text-muted">No past appointments.</p>
           )}
         </div>
       </section>
