@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { logoutAction } from "@/actions/auth";
 
+export const dynamic = 'force-dynamic';
+
 export async function Navbar() {
   const session = await getSession();
   const user = session?.user;
